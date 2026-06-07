@@ -35,5 +35,32 @@ def generate_response(query, retrieved_chunks):
             "Try rephrasing your question — or check that your ingestion pipeline is working."
         )
 
-    # Your implementation here.
-    return "⚙️ Response generation not yet implemented. Complete Milestone 3 to activate answers."
+    context_parts = []
+    for i, chunk in enumerate(retrieved_chunks, start=1):
+        context_parts.append(f"[CHUNK {i} | Game: {chunk['game']}]\n{chunk['text']}")
+    context_block = "\n\n".join(context_parts)
+
+    system_message = (
+        "You are a rules lookup tool. Answer using only the exact wording of the rule "
+        "chunks provided. Do not paraphrase, infer missing steps, or add any detail not "
+        "present in the text. If the chunks do not contain a clear answer — including if "
+        "they are only tangentially related — say so explicitly. Never draw on outside "
+        "knowledge about board games. Do not combine or compare information across chunks. "
+        "Treat each chunk independently. If the retrieved text does not mention something, do not "
+        "conclude it is forbidden or allowed — only report what is explicitly stated. "
+        "Always identify which game your answer comes from by citing the chunk label (e.g. [CHUNK 1 | Game: Catan])."
+    )
+
+    user_message = (
+        f"Here are the relevant rule chunks:\n\n{context_block}\n\nQuestion: {query}"
+    )
+
+    completion = _client.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message},
+        ],
+    )
+
+    return completion.choices[0].message.content

@@ -52,7 +52,7 @@ region of text at their boundary.
 ### Chunk size
 
 ```
-300 characters. Rule book text is semantically dense — a single rule is
+400 characters. Rule book text is semantically dense — a single rule is
 often 1–3 sentences, which fits comfortably in this range. Going smaller
 would fragment individual rules; going larger would merge unrelated rules
 into one chunk, making retrieval less precise.
@@ -63,7 +63,7 @@ into one chunk, making retrieval less precise.
 ### Overlap
 
 ```
-50 characters of overlap between adjacent chunks. If a rule falls exactly
+100 characters of overlap between adjacent chunks. If a rule falls exactly
 on a chunk boundary, neither chunk alone contains the full rule. Overlap
 duplicates the tail of each chunk at the start of the next, so boundary-
 spanning content can still be retrieved intact. 50 characters is roughly
@@ -117,10 +117,13 @@ handle these cases better, at the cost of more implementation complexity.
 
 ```
 [your answer here]
+Actual Chunk Count: 149
 ```
 
 **One thing that surprised you or didn't match your expectations:**
 
 ```
 [your answer here]
+The chunk_document() function sounds difficult to implement, but after 
+working through the logic myself, it is pretty straight forward.
 ```

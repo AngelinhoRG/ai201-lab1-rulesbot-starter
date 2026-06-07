@@ -46,6 +46,15 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 
 ```
 [your answer here]
+I will call _collection.query() with three arguments:
+  - query_texts=[query]: a list containing the single user query string.
+    ChromaDB embeds it automatically using the same SentenceTransformer
+    model used during ingestion, so the vector spaces match.
+  - n_results=n_results: limits how many chunks are returned (default 3
+    from config.py), keeping context concise for the generator.
+  - include=["documents", "metadatas", "distances"]: requests the chunk
+    text, the game metadata, and the cosine distance score — exactly the
+    three fields needed to build the return dicts.
 ```
 
 ---
@@ -56,6 +65,10 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 
 ```
 [your answer here]
+[
+    {"text": "chunk text", "game": "Catan", "distance": 0.21},
+    {"text": "chunk text", "game": "Catan", "distance": 0.52}
+]
 ```
 
 ---
@@ -66,6 +79,8 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 
 ```
 [your answer here]
+The index I need to access to get the actual list of results for a single query is index 0.
+The nesting exists in case we ever want to do batch queries, but for now we only do one, hence the index 0.
 ```
 
 ---
@@ -76,6 +91,7 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 
 ```
 [your answer here]
+I will filter out results above a certain distance score. The tradeoff there is that maybe no chunks meet the threshold and you end up with nothing as the result. Leaving everything there might create some sort of clutter.
 ```
 
 ---
@@ -86,6 +102,21 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 
 ```
 [your answer here]
+(a) Empty collection: the function returns [] immediately via the early
+    check `if _collection.count() == 0` before querying. This avoids a
+    ChromaDB error that occurs when querying an empty collection.
+
+(b) No good matches: the function returns all n_results chunks regardless
+    of how high their distance scores are. There is no threshold filter,
+    so the caller (generate_response) receives the best available chunks
+    even if none are truly relevant. The generator must handle low-quality
+    context gracefully.
+
+(c) Multiple games matched: the function returns them as-is, ranked by
+    distance. It does not filter by game — if chunks from Risk and Catan
+    both score well, both appear in the results. This is intentional: the
+    user's query may span multiple games, and filtering by game would
+    require knowing the answer before asking the question.
 ```
 
 ---
@@ -97,14 +128,16 @@ Results should be ordered from most to least relevant (lowest to highest distanc
 **Test query and top result returned:**
 
 ```
-Query: [your test query]
-Top result game: [game name]
-Distance score: [score]
-Does it make sense? [yes / no / explain]
+Query: What happens if you land on a property that you do not want to buy or purchase in Monopoly?
+
+Top result game: Monopoly
+Distance score: 0.444
+Does it make sense? No, it does not make much sense because the header usually is the closest chunk, followed by chunks with medium level of relevence
 ```
 
 **One thing about the query results that surprised you:**
 
 ```
 [your answer here]
+For Monopoly, the header "[Monopoly] (dist: 0.444) MONOPOLY — OFFICIAL RULES SUMMARY" is usually the chunk with the best distance score.
 ```
